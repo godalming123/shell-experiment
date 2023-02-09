@@ -4,53 +4,87 @@
 
 // --- a list of ANSI keycodes to help us ---
 // text styles
-char* TEXT_UNDERLINE   = "\033[4m";
-char* TEXT_BOLD        = "\033[1m";
-char* RESET            = "\033[0m";
+std::string TEXT_UNDERLINE      = "\033[4m";
+std::string TEXT_BOLD           = "\033[1m";
+std::string RESET               = "\033[0m";
 // keycodes to move the cursor
-char* CURSOR_UP        = "\E[A";
-char* CURSOR_DOWN      = "\E[B";
-char* CURSOR_LEFT      = "\E[D";
-char* CURSOR_RIGHT     = "\E[C";
-char* CURSOR_START     = "\r";
+std::string CURSOR_UP           = "\E[A";
+std::string CURSOR_DOWN         = "\E[B";
+std::string CURSOR_LEFT         = "\E[D";
+std::string CURSOR_RIGHT        = "\E[C";
+std::string CURSOR_START        = "\r";
+std::string CURSOR_ERASE_TO_END = "\033[K";
+std::string CURSOR_SAVE_POS     = "\033[s";
+std::string CURSOR_RESTORE_POS  = "\033[u";
 // colors (fg)
-char* FG_BLACK         = "\033[30m";
-char* FG_RED           = "\033[31m";
-char* FG_GREEN         = "\033[32m";
-char* FG_YELLOW        = "\033[33m";
-char* FG_BLUE          = "\033[34m";
-char* FG_MAGENTA       = "\033[35m";
-char* FG_CYAN          = "\033[36m";
-char* FG_WHITE         = "\033[37m";
-char* FG_LIGHT_BLACK   = "\033[90m";
-char* FG_LIGHT_RED     = "\033[91m";
-char* FG_LIGHT_GREEN   = "\033[92m";
-char* FG_LIGHT_YELLOW  = "\033[93m";
-char* FG_LIGHT_BLUE    = "\033[94m";
-char* FG_LIGHT_MAGENTA = "\033[95m";
-char* FG_LIGHT_CYAN    = "\033[96m";
-char* FG_LIGHT_WHITE   = "\033[97m";
+std::string FG_BLACK            = "\033[30m";
+std::string FG_RED              = "\033[31m";
+std::string FG_GREEN            = "\033[32m";
+std::string FG_YELLOW           = "\033[33m";
+std::string FG_BLUE             = "\033[34m";
+std::string FG_MAGENTA          = "\033[35m";
+std::string FG_CYAN             = "\033[36m";
+std::string FG_WHITE            = "\033[37m";
+std::string FG_LIGHT_BLACK      = "\033[90m";
+std::string FG_LIGHT_RED        = "\033[91m";
+std::string FG_LIGHT_GREEN      = "\033[92m";
+std::string FG_LIGHT_YELLOW     = "\033[93m";
+std::string FG_LIGHT_BLUE       = "\033[94m";
+std::string FG_LIGHT_MAGENTA    = "\033[95m";
+std::string FG_LIGHT_CYAN       = "\033[96m";
+std::string FG_LIGHT_WHITE      = "\033[97m";
 // colors (bg)
-char* BG_BLACK          = "\033[40m";
-char* BG_RED            = "\033[41m";
-char* BG_GREEN          = "\033[42m";
-char* BG_YELLOW         = "\033[43m";
-char* BG_BLUE           = "\033[44m";
-char* BG_MAGENTA        = "\033[45m";
-char* BG_CYAN           = "\033[46m";
-char* BG_WHITE          = "\033[47m";
-char* BG_LIGHT_BLACK   = "\033[100m";
-char* BG_LIGHT_RED     = "\033[101m";
-char* BG_LIGHT_GREEN   = "\033[102m";
-char* BG_LIGHT_YELLOW  = "\033[103m";
-char* BG_LIGHT_BLUE    = "\033[104m";
-char* BG_LIGHT_MAGENTA = "\033[105m";
-char* BG_LIGHT_CYAN    = "\033[106m";
-char* BG_LIGHT_WHITE   = "\033[107m";
+std::string BG_BLACK            = "\033[40m";
+std::string BG_RED              = "\033[41m";
+std::string BG_GREEN            = "\033[42m";
+std::string BG_YELLOW           = "\033[43m";
+std::string BG_BLUE             = "\033[44m";
+std::string BG_MAGENTA          = "\033[45m";
+std::string BG_CYAN             = "\033[46m";
+std::string BG_WHITE            = "\033[47m";
+std::string BG_LIGHT_BLACK      = "\033[100m";
+std::string BG_LIGHT_RED        = "\033[101m";
+std::string BG_LIGHT_GREEN      = "\033[102m";
+std::string BG_LIGHT_YELLOW     = "\033[103m";
+std::string BG_LIGHT_BLUE       = "\033[104m";
+std::string BG_LIGHT_MAGENTA    = "\033[105m";
+std::string BG_LIGHT_CYAN       = "\033[106m";
+std::string BG_LIGHT_WHITE      = "\033[107m";
+
+// move the cursor with ansi functions
+void cursorMove(int x, int y) {
+	std::cout << "\033[" << y << x << "H";
+}
+void cursorChangeX(int relativeX) {
+	if (relativeX > 0) {
+		std::cout << "\033[" << relativeX << "C";
+	}
+	else if (relativeX < 0) {
+		std::cout << "\033[" << -relativeX << "D";
+	}
+}
+void cursorChangeY(int relativeY) {
+	if (relativeY > 0) {
+		std::cout << "\033[" << relativeY << "B";
+	}
+	else if (relativeY < 0) {
+		std::cout << "\033[" << -relativeY << "A";
+	}
+}
 
 // print a simple prompt for the user
 void printPrompt(std::string cmdTxt) {
 	std::cout << FG_LIGHT_GREEN << TEXT_BOLD << " currentDir " << RESET << FG_LIGHT_CYAN << "> " << RESET << cmdTxt;
+}
+
+// print the command text again
+void reprintCmdTxt(std::string cmdTxt, int cursorPos) {
+	std::cout << CURSOR_SAVE_POS;  // save the cursor position
+	cursorChangeX(-cursorPos);     // move the cursor to the start of the line
+	std::cout
+		<< cmdTxt              // print the command text again
+		<< " "                 // print a space so any charecters from the preious command text get overidden
+		<< CURSOR_RESTORE_POS; // restore the cursor postion
 }
 
 // repeat a string
@@ -70,6 +104,7 @@ int main() {
 	// variables for main loop
 	std::string cmdTxt = "";
 	std::string currentDirectory = "";
+	int cursorPos = 0;
 
 	// start prompt
 	printPrompt(cmdTxt);
@@ -86,44 +121,52 @@ int main() {
 					running = false;
 				}
 				else {
-					// print a banner for the command output
-					std::cout << CURSOR_START << "──── " << FG_LIGHT_CYAN << TEXT_BOLD << cmdTxt << RESET << " " << repeat("─", 50 - cmdTxt.length()) << "\n";
+					std::cout << CURSOR_START << "─ " << FG_LIGHT_CYAN << TEXT_BOLD << cmdTxt << RESET << " " << repeat("─", 50 - cmdTxt.length()) << "\n"; // print a banner for the command output
 					system(cmdTxt.data()); // run the command
 					cmdTxt = ""; // reset the command text
+					cursorPos = 0; // reset the cursor position
 					printPrompt(cmdTxt); // print a prompt for the user
 				}
 			break;
 			case '\177': // if they press backspace
 				// remove the last charecter from the command to be ran
-				if (cmdTxt != "") {
-					cmdTxt.pop_back();
-					std::cout << CURSOR_LEFT << " " << CURSOR_LEFT;
+				if (cmdTxt != "" and cursorPos > 0) {
+					cmdTxt.erase(cursorPos-1, 1);     // erase the charecter before our cursor
+					reprintCmdTxt(cmdTxt, cursorPos); // print the command text again
+					std::cout << CURSOR_LEFT;         // move the cursor left
+					cursorPos--;                      // change the variable that stores cursor position as it has changed in the console
 				}
 			break;
-			case '\E': // this means they will press an arrow key
+			case '\E': // this means they pressed an arrow key
 				if (getchar() == '[') {
 					switch (char charecter = getchar()) {
 						case 'A': // up arrow
-							cmdTxt = "up";
+							std::cout << "↑" << CURSOR_LEFT;
 						break;
 						case 'B': // down arrow
-							cmdTxt = "down";
+							std::cout << "↓" << CURSOR_LEFT;
 						break;
 						case 'D': // left arrow
-							cmdTxt = "left";
+							if (cursorPos > 0) {
+								cursorPos--;
+								std::cout << CURSOR_LEFT;
+							}
 						break;
 						case 'C': // right arrow
-							cmdTxt = "right";
+							if (cursorPos < cmdTxt.length()) {
+								cursorPos++;
+								std::cout << CURSOR_RIGHT;
+							}
 						break;
 					}
-					std::cout << CURSOR_START;
-					printPrompt(cmdTxt);
 				}
 			break;
 			default:
 				// add typed charecter to string
-				cmdTxt += charecter;
-				std::cout << charecter;
+				cmdTxt.insert(cursorPos, 1, charecter);
+				reprintCmdTxt(cmdTxt, cursorPos);
+				std::cout << CURSOR_RIGHT;
+				cursorPos++;
 			break;
 		}
 	}
