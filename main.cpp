@@ -50,6 +50,8 @@ std::string BG_LIGHT_BLUE       = "\033[104m";
 std::string BG_LIGHT_MAGENTA    = "\033[105m";
 std::string BG_LIGHT_CYAN       = "\033[106m";
 std::string BG_LIGHT_WHITE      = "\033[107m";
+// combinations of ansi codes
+std::string CLEAR_LINE          = CURSOR_START + CURSOR_ERASE_TO_END + CURSOR_START;
 
 // move the cursor with ansi functions
 void cursorMove(int x, int y) {
@@ -74,7 +76,7 @@ void cursorChangeY(int relativeY) {
 
 // print a simple prompt for the user
 void printPrompt(std::string cmdTxt) {
-	std::cout << FG_LIGHT_GREEN << TEXT_BOLD << " currentDir " << RESET << FG_LIGHT_CYAN << "> " << RESET << cmdTxt;
+	std::cout << FG_LIGHT_GREEN << TEXT_BOLD << "   currentDir " << RESET << "on " << TEXT_BOLD << FG_LIGHT_BLUE << " github branch [+] " << RESET << FG_LIGHT_CYAN << "\n > " << RESET << cmdTxt;
 }
 
 // print the command text again
@@ -85,6 +87,11 @@ void reprintCmdTxt(std::string cmdTxt, int cursorPos) {
 		<< cmdTxt              // print the command text again
 		<< " "                 // print a space so any charecters from the preious command text get overidden
 		<< CURSOR_RESTORE_POS; // restore the cursor postion
+}
+
+// print a portion of text styled like a header
+void printHeader(std::string text) {
+	std::cout << FG_CYAN << "  " << RESET << BG_CYAN << TEXT_BOLD << text << RESET << FG_CYAN << ""<< RESET << "\n";
 }
 
 // repeat a string
@@ -106,6 +113,10 @@ int main() {
 	std::string currentDirectory = "";
 	int cursorPos = 0;
 
+	// print some fancy colors
+	std::cout << BG_BLACK       << "   " << BG_RED       << "   " << BG_GREEN       << "   " << BG_YELLOW       << "   " << BG_BLUE       << "   " << BG_MAGENTA       << "   " << BG_CYAN << "   " << RESET << "\n";
+	std::cout << BG_LIGHT_BLACK << "   " << BG_LIGHT_RED << "   " << BG_LIGHT_GREEN << "   " << BG_LIGHT_YELLOW << "   " << BG_LIGHT_BLUE << "   " << BG_LIGHT_MAGENTA << "   " << BG_LIGHT_CYAN << "   " << RESET << "\n";
+
 	// start prompt
 	printPrompt(cmdTxt);
 
@@ -121,7 +132,8 @@ int main() {
 					running = false;
 				}
 				else {
-					std::cout << CURSOR_START << "─ " << FG_LIGHT_CYAN << TEXT_BOLD << cmdTxt << RESET << " " << repeat("─", 50 - cmdTxt.length()) << "\n"; // print a banner for the command output
+					std::cout << CLEAR_LINE << CURSOR_UP << CLEAR_LINE; // clear the line for a banner
+					printHeader(cmdTxt); // print a banner for the command output
 					system(cmdTxt.data()); // run the command
 					cmdTxt = ""; // reset the command text
 					cursorPos = 0; // reset the cursor position
@@ -137,7 +149,10 @@ int main() {
 					cursorPos--;                      // change the variable that stores cursor position as it has changed in the console
 				}
 			break;
-			case '\E': // this means they pressed an arrow key
+			case '^':
+				std::cout << "here";
+			break;
+			case '\E': // this means they pressed an arrow key or delete
 				if (getchar() == '[') {
 					switch (char charecter = getchar()) {
 						case 'A': // up arrow
@@ -156,6 +171,19 @@ int main() {
 							if (cursorPos < cmdTxt.length()) {
 								cursorPos++;
 								std::cout << CURSOR_RIGHT;
+							}
+						break;
+						case 'H': // home key
+							cursorChangeX(-cursorPos);
+							cursorPos = 0;
+						break;
+						case 'F': // end key
+							cursorChangeX(cmdTxt.length() - cursorPos);
+							cursorPos = cmdTxt.length();
+						case '3': // delete key
+							if (getchar() == '~' and cmdTxt != "" and cursorPos < cmdTxt.length()) {
+								cmdTxt.erase(cursorPos, 1);     // erase the charecter on our cursor
+								reprintCmdTxt(cmdTxt, cursorPos); // print the command text again
 							}
 						break;
 					}

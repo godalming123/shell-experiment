@@ -6,9 +6,10 @@ The file I use to plan this project.
  - add tab complete
  - add a way to cycle through command history
  - add more information to the prompt EG: git status, programing language of current repository
- - add colour
+ - add colour to commands
 # Done
  - basic usage
  - handle some keys such as arrows
  - add a way to exit the shell
  - add a way to go backwords and forwards in the command (a way to use the left and right arrow keys)
+ - handle delete, home, and end keys
